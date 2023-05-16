@@ -28,6 +28,13 @@ async function run() {
     const result = await jobsCollection.createIndex(indexKeys, indexOptions);
     console.log(result);
     app.get("/allJobs", async (req, res) => {
+      const query = req.query.email;
+      if (query) {
+        const filter = {postedBy : query};
+        const jobs = await jobsCollection.find(filter).toArray();
+        res.send(jobs);
+        return;
+      }
         const jobs = await jobsCollection
         .find({})
         .sort({ createdAt: -1 })
@@ -53,13 +60,24 @@ async function run() {
     });
 
     app.get("/allJobsByCategory/:category", async (req, res) => {
-      console.log(req.params.id);
-      const jobs = await jobsCollection
+      const status = req.params.category;
+      console.log(status);
+      if(status == "all"){
+        const jobs = await jobsCollection
+        .find()
+        .sort({ createdAt: -1 })
+        .toArray();
+        console.log(jobs);
+        res.send(jobs);
+      }
+      else{
+        const jobs = await jobsCollection
         .find({
           status: req.params.category,
         })
         .toArray();
-      res.send(jobs);
+        res.send(jobs);
+      }
     });
 
     app.post("/post-job", async (req, res) => {
